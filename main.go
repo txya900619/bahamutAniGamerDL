@@ -17,6 +17,8 @@ func main() {
 			animate.SeeAD()
 		}
 	}
-	animate.GetM3u8()
+	animate.GetM3u8Url()
 	animate.GetPlaylist()
+	animate.DownloadM3u8()
+	animate.ParseChunkList()
 }
