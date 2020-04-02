@@ -48,7 +48,7 @@ func (anime *Animate) GetPlaylist() {
 		}
 	}
 }
-func (anime Animate) ParseChunkList() {
+func (anime *Animate) ParseChunkList() {
 	m3u8File, err := os.Open(anime.TempFolder + "/" + anime.ChunkListUrl)
 	if err != nil {
 		log.Fatal("Fail to read m3u8 file:", err.Error())

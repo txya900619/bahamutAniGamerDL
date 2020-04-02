@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/txya900619/bahamutAniGamerDL/animateDL"
 )
 
@@ -21,4 +22,6 @@ func main() {
 	animate.GetPlaylist()
 	animate.DownloadM3u8()
 	animate.ParseChunkList()
+	fmt.Println(animate.ChunkList)
+	animate.DownloadAnimate()
 }

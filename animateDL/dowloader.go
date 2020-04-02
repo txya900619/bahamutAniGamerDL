@@ -123,4 +123,5 @@ func (anime *Animate) DownloadAnimate() {
 	}
 	close(ch)
 	wg.Wait()
+	anime.ProgressBar.Finish()
 }
