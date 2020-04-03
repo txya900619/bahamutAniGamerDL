@@ -7,3 +7,8 @@
 *.iml
 out
 gen
+
+.tmp*
+ffmpeg
+*.ts
+*.mp4

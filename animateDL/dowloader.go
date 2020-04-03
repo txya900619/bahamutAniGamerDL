@@ -1,9 +1,11 @@
 package animateDL
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/cheggaaa/pb/v3"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -29,6 +31,7 @@ type Animate struct {
 	ChunkList    []string
 	TempFolder   string
 	ProgressBar  *pb.ProgressBar
+	AES128Key    []byte
 }
 
 func (anime *Animate) DownloadM3u8() {
@@ -46,20 +49,10 @@ func (anime *Animate) DownloadM3u8() {
 		log.Fatal(" m3u8 file save fail:" + err.Error())
 	}
 }
-func (anime *Animate) DownloadM3u8Key(url string) string {
-	fileName := strings.Split(path.Base(url), "?")[0]
-	out, err := os.Create(anime.TempFolder + "/" + fileName)
-	if err != nil {
-		log.Fatal("Fail to creat m3u8 key file:", err.Error())
-	}
-	defer out.Close()
+func (anime *Animate) GetM3u8Key(url string) {
 	resp := anime.request("GET", url)
 	defer resp.Body.Close()
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		log.Fatal("Fail to save m3u8 key file:", err.Error())
-	}
-	return fileName
+	anime.AES128Key, _ = ioutil.ReadAll(resp.Body)
 }
 func (anime *Animate) downloadChunk(url string) bool {
 	filename := strings.Split(path.Base(url), "?")[0]
@@ -83,7 +76,26 @@ func (anime *Animate) downloadChunk(url string) bool {
 		return false
 	}
 	defer resp.Body.Close()
-	_, err = io.Copy(out, resp.Body)
+	animeChunk, _ := ioutil.ReadAll(resp.Body)
+	animeChunk, err = AES128Decrypt(animeChunk, anime.AES128Key)
+	if err != nil {
+		fmt.Println("Decrypt " + filename + " fail")
+		fmt.Println(err)
+		fmt.Println("Retry")
+		out.Close()
+		os.Remove(anime.TempFolder + "/" + filename)
+		time.Sleep(500 * time.Millisecond)
+		return false
+	}
+	syncByte := uint8(71) //0x47
+	bLen := len(animeChunk)
+	for j := 0; j < bLen; j++ {
+		if animeChunk[j] == syncByte {
+			animeChunk = animeChunk[j:]
+			break
+		}
+	}
+	_, err = io.Copy(out, bytes.NewReader(animeChunk))
 	if err != nil {
 		fmt.Println(filename + " save failed ")
 		fmt.Println("Retry")
@@ -123,5 +135,6 @@ func (anime *Animate) DownloadAnimate() {
 	}
 	close(ch)
 	wg.Wait()
+
 	anime.ProgressBar.Finish()
 }

@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"strings"
 )
 
@@ -59,19 +58,12 @@ func (anime *Animate) ParseChunkList() {
 	}
 	if listType == m3u8.MEDIA {
 		mediapl := playList.(*m3u8.MediaPlaylist)
-		newPlayList, err := m3u8.NewMediaPlaylist(mediapl.WinSize(), mediapl.Count())
-		if err != nil {
-			log.Fatal("creat new media playlist fail:", err.Error())
-		}
+		anime.GetM3u8Key(mediapl.Key.URI)
 		chunkPrefix := strings.Split(anime.M3u8Url, "playlist.m3u8")[0]
-		newPlayList.SetKey(mediapl.Key.Method, anime.DownloadM3u8Key(mediapl.Key.URI), "", "", "")
 		for _, chunk := range mediapl.Segments {
 			if chunk != nil {
 				anime.ChunkList = append(anime.ChunkList, chunkPrefix+chunk.URI)
-				newPlayList.Append(strings.Split(path.Base(chunk.URI), "?")[0], chunk.Duration, "")
 			}
 		}
-		newPlayList.Close()
-		ioutil.WriteFile(anime.TempFolder+"/"+anime.ChunkListUrl, newPlayList.Encode().Bytes(), 0755)
 	}
 }
