@@ -8,7 +8,9 @@
 out
 gen
 
-.tmp*
+\.tmp*
+\.tmp*\
+
 ffmpeg
 *.ts
 *.mp4
